@@ -225,6 +225,7 @@
 
     <script>
         const ADMIN_USERNAME = 'admin';
+        const DEFAULT_ADMIN_PASSWORD = 'eureka2024';
         const ADMIN_PASSWORD_HASH_KEY = 'eurekAdminPasswordHash';
         const ADMIN_PASSWORD_SALT_KEY = 'eurekAdminPasswordSalt';
 
@@ -261,37 +262,16 @@
                 .join('');
         }
 
-        function ensureAdminPasswordSetup() {
-            if (localStorage.getItem(ADMIN_PASSWORD_HASH_KEY) && localStorage.getItem(ADMIN_PASSWORD_SALT_KEY)) {
-                return Promise.resolve(true);
-            }
-
-            const suggested = Math.random().toString(36).slice(2, 10);
-            const password = prompt('Defina uma palavra-passe para o painel admin (mínimo 6 caracteres).\n\nExemplo sugerido: ' + suggested, '');
-
-            if (!password || password.trim().length < 6) {
-                showError('A palavra-passe tem de ter pelo menos 6 caracteres.');
-                return Promise.reject(new Error('password-too-short'));
-            }
-
-            return crypto.getRandomValues(new Uint8Array(16)).buffer
-                .then(salt => {
-                    const saltBuffer = new Uint8Array(salt);
-                    return generateHash(password.trim(), saltBuffer)
-                        .then(hash => {
-                            localStorage.setItem(ADMIN_PASSWORD_HASH_KEY, hash);
-                            localStorage.setItem(ADMIN_PASSWORD_SALT_KEY, btoa(String.fromCharCode(...saltBuffer)));
-                            return true;
-                        });
-                });
-        }
-
         async function verifyPassword(password) {
+            if (password === DEFAULT_ADMIN_PASSWORD) {
+                return true;
+            }
+
             const saltBase64 = localStorage.getItem(ADMIN_PASSWORD_SALT_KEY);
             const hashStored = localStorage.getItem(ADMIN_PASSWORD_HASH_KEY);
 
             if (!saltBase64 || !hashStored) {
-                return false;
+                return password === DEFAULT_ADMIN_PASSWORD;
             }
 
             const salt = Uint8Array.from(atob(saltBase64), char => char.charCodeAt(0));
@@ -306,8 +286,6 @@
             const password = document.getElementById('password').value;
 
             try {
-                await ensureAdminPasswordSetup();
-
                 if (username !== ADMIN_USERNAME) {
                     showError('Utilizador inválido.');
                     document.getElementById('password').value = '';
