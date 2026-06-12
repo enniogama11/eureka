@@ -1,12 +1,18 @@
 // Integração WhatsApp
 document.addEventListener('DOMContentLoaded', () => {
     const whatsappBtn = document.getElementById('whatsappBtn');
+    if (!whatsappBtn) return;
     whatsappBtn.addEventListener('click', sendToWhatsApp);
 });
 
 function sendToWhatsApp() {
-    if (cart.length === 0) {
+    if (!Array.isArray(cart) || cart.length === 0) {
         alert('Seu carrinho está vazio!');
+        return;
+    }
+
+    if (!menuData || !menuData.restaurant) {
+        alert('Os dados do restaurante não estão disponíveis.');
         return;
     }
 

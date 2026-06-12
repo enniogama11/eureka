@@ -1,11 +1,17 @@
 // Gerar PDF do pedido
 document.addEventListener('DOMContentLoaded', () => {
     const pdfBtn = document.getElementById('pdfBtn');
+    if (!pdfBtn) return;
     pdfBtn.addEventListener('click', generatePDF);
 });
 
 function generatePDF() {
-    if (cart.length === 0) {
+    if (!window.html2pdf || typeof window.html2pdf !== 'function') {
+        alert('O gerador de PDF não está disponível no momento.');
+        return;
+    }
+
+    if (!Array.isArray(cart) || cart.length === 0) {
         alert('Seu carrinho está vazio!');
         return;
     }

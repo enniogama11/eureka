@@ -1,15 +1,55 @@
 let menuData = null;
+const MENU_STORAGE_KEY = 'eurekMenuData';
+
+function isValidMenuData(data) {
+    return Boolean(data && Array.isArray(data.categories) && Array.isArray(data.products));
+}
+
+function showMenuError(message) {
+    const mainContent = document.getElementById('mainContent');
+    if (!mainContent) return;
+
+    mainContent.innerHTML = `
+        <section class="category-section">
+            <h2 class="category-title">⚠️ Não foi possível carregar o menu</h2>
+            <p style="color: rgba(255,255,255,0.8);">${message}</p>
+        </section>
+    `;
+}
 
 // Carregar dados do menu
 async function loadMenu() {
     try {
+        const savedMenu = localStorage.getItem(MENU_STORAGE_KEY);
+
+        if (savedMenu) {
+            const parsedMenu = JSON.parse(savedMenu);
+            if (isValidMenuData(parsedMenu)) {
+                menuData = parsedMenu;
+                renderCategories();
+                renderMenu();
+                setupEventListeners();
+                return;
+            }
+        }
+
         const response = await fetch('data/menu.json');
+        if (!response.ok) {
+            throw new Error(`Falha ao carregar menu: ${response.status}`);
+        }
+
         menuData = await response.json();
+        if (!isValidMenuData(menuData)) {
+            throw new Error('Estrutura do menu inválida.');
+        }
+
+        localStorage.setItem(MENU_STORAGE_KEY, JSON.stringify(menuData));
         renderCategories();
         renderMenu();
         setupEventListeners();
     } catch (error) {
         console.error('Erro ao carregar menu:', error);
+        showMenuError('Tente recarregar a página ou verificar a conexão.');
     }
 }
 
@@ -64,33 +104,62 @@ function renderMenu(categoryFilter = null) {
 
 // Criar card de produto
 function createProductCard(product) {
-    const card = document.createElement('div');
+    const card = document.createElement('article');
     card.className = 'card';
 
-    let itemsHTML = '';
-    if (product.items && product.items.length > 0) {
-        itemsHTML = `
-            <div class="card-items">
-                ${product.items.map(item => `
-                    <div class="item">
-                        <span class="item-name">${item.name}</span>
-                        <span class="item-price">${item.price.toLocaleString('pt-AO')} Kz</span>
-                    </div>
-                `).join('')}
-            </div>
-        `;
+    const image = document.createElement('div');
+    image.className = 'dish-img';
+    image.style.backgroundImage = `url("${product.image || ''}")`;
+    card.appendChild(image);
+
+    const title = document.createElement('h3');
+    title.textContent = product.name || 'Produto';
+    card.appendChild(title);
+
+    const price = document.createElement('p');
+    price.className = 'card-price';
+    price.textContent = `${Number(product.price || 0).toLocaleString('pt-AO')} Kz`;
+    card.appendChild(price);
+
+    if (product.description) {
+        const description = document.createElement('p');
+        description.className = 'card-description';
+        description.textContent = product.description;
+        card.appendChild(description);
     }
 
-    card.innerHTML = `
-        <div class="dish-img" style="background-image: url('${product.image}')"></div>
-        <h3>${product.name}</h3>
-        <p class="card-price">${product.price.toLocaleString('pt-AO')} Kz</p>
-        ${product.description ? `<p class="card-description">${product.description}</p>` : ''}
-        ${itemsHTML}
-        <button class="add-to-cart-btn" onclick="addToCart(${product.id}, '${product.name}', ${product.price})">
-            <i class="ph-bold ph-plus"></i> Adicionar
-        </button>
-    `;
+    if (Array.isArray(product.items) && product.items.length > 0) {
+        const itemsContainer = document.createElement('div');
+        itemsContainer.className = 'card-items';
+
+        product.items.forEach(item => {
+            const row = document.createElement('div');
+            row.className = 'item';
+
+            const name = document.createElement('span');
+            name.className = 'item-name';
+            name.textContent = item.name || 'Item';
+
+            const priceItem = document.createElement('span');
+            priceItem.className = 'item-price';
+            priceItem.textContent = `${Number(item.price || 0).toLocaleString('pt-AO')} Kz`;
+
+            row.appendChild(name);
+            row.appendChild(priceItem);
+            itemsContainer.appendChild(row);
+        });
+
+        card.appendChild(itemsContainer);
+    }
+
+    const addButton = document.createElement('button');
+    addButton.type = 'button';
+    addButton.className = 'add-to-cart-btn';
+    addButton.innerHTML = '<i class="ph-bold ph-plus"></i> Adicionar';
+    addButton.addEventListener('click', () => {
+        addToCart(product.id, product.name, Number(product.price || 0));
+    });
+    card.appendChild(addButton);
 
     return card;
 }

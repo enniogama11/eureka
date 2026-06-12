@@ -1,17 +1,41 @@
 let cart = [];
 
+function normalizeCartItem(item) {
+    return {
+        id: Number(item.id) || 0,
+        name: String(item.name || 'Produto'),
+        price: Number(item.price) || 0,
+        quantity: Math.max(1, Number(item.quantity) || 1)
+    };
+}
+
+function safeReadCart() {
+    try {
+        const saved = localStorage.getItem('eurekCart');
+        if (!saved) return [];
+
+        const parsed = JSON.parse(saved);
+        return Array.isArray(parsed) ? parsed.map(normalizeCartItem).filter(item => item.id) : [];
+    } catch (error) {
+        console.warn('Carrinho inválido, limpando armazenamento:', error);
+        localStorage.removeItem('eurekCart');
+        return [];
+    }
+}
+
 // Carregar carrinho do localStorage
 function loadCart() {
-    const saved = localStorage.getItem('eurekCart');
-    if (saved) {
-        cart = JSON.parse(saved);
-        updateCartUI();
-    }
+    cart = safeReadCart();
+    updateCartUI();
 }
 
 // Salvar carrinho no localStorage
 function saveCart() {
-    localStorage.setItem('eurekCart', JSON.stringify(cart));
+    try {
+        localStorage.setItem('eurekCart', JSON.stringify(cart));
+    } catch (error) {
+        console.warn('Não foi possível salvar o carrinho:', error);
+    }
     updateCartUI();
 }
 
@@ -64,33 +88,75 @@ function updateCartUI() {
     const cartCount = document.querySelector('.cart-count');
     const cartTotal = document.getElementById('cartTotal');
 
-    // Atualizar contagem
-    const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-    cartCount.textContent = totalItems;
+    if (!cartItemsContainer) return;
 
-    // Atualizar total
+    const totalItems = cart.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
+    if (cartCount) cartCount.textContent = String(totalItems);
+
     const total = getCartTotal();
-    cartTotal.textContent = total.toLocaleString('pt-AO') + ' Kz';
+    if (cartTotal) cartTotal.textContent = `${total.toLocaleString('pt-AO')} Kz`;
 
-    // Renderizar itens
+    cartItemsContainer.innerHTML = '';
+
     if (cart.length === 0) {
-        cartItemsContainer.innerHTML = '<div class="cart-empty">Seu carrinho está vazio</div>';
-    } else {
-        cartItemsContainer.innerHTML = cart.map(item => `
-            <div class="cart-item">
-                <div class="cart-item-info">
-                    <div class="cart-item-name">${item.name}</div>
-                    <div class="cart-item-price">${item.price.toLocaleString('pt-AO')} Kz</div>
-                </div>
-                <div class="cart-item-qty">
-                    <button class="qty-btn" onclick="updateQuantity(${item.id}, ${item.quantity - 1})">−</button>
-                    <span>${item.quantity}</span>
-                    <button class="qty-btn" onclick="updateQuantity(${item.id}, ${item.quantity + 1})">+</button>
-                    <button class="remove-btn" onclick="removeFromCart(${item.id})">Remover</button>
-                </div>
-            </div>
-        `).join('');
+        const emptyState = document.createElement('div');
+        emptyState.className = 'cart-empty';
+        emptyState.textContent = 'Seu carrinho está vazio';
+        cartItemsContainer.appendChild(emptyState);
+        return;
     }
+
+    cart.forEach(item => {
+        const cartItem = document.createElement('div');
+        cartItem.className = 'cart-item';
+
+        const info = document.createElement('div');
+        info.className = 'cart-item-info';
+
+        const name = document.createElement('div');
+        name.className = 'cart-item-name';
+        name.textContent = item.name;
+
+        const price = document.createElement('div');
+        price.className = 'cart-item-price';
+        price.textContent = `${Number(item.price || 0).toLocaleString('pt-AO')} Kz`;
+
+        info.appendChild(name);
+        info.appendChild(price);
+
+        const qtyWrap = document.createElement('div');
+        qtyWrap.className = 'cart-item-qty';
+
+        const minusBtn = document.createElement('button');
+        minusBtn.className = 'qty-btn';
+        minusBtn.type = 'button';
+        minusBtn.textContent = '−';
+        minusBtn.addEventListener('click', () => updateQuantity(item.id, item.quantity - 1));
+
+        const quantity = document.createElement('span');
+        quantity.textContent = String(item.quantity || 1);
+
+        const plusBtn = document.createElement('button');
+        plusBtn.className = 'qty-btn';
+        plusBtn.type = 'button';
+        plusBtn.textContent = '+';
+        plusBtn.addEventListener('click', () => updateQuantity(item.id, item.quantity + 1));
+
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'remove-btn';
+        removeBtn.type = 'button';
+        removeBtn.textContent = 'Remover';
+        removeBtn.addEventListener('click', () => removeFromCart(item.id));
+
+        qtyWrap.appendChild(minusBtn);
+        qtyWrap.appendChild(quantity);
+        qtyWrap.appendChild(plusBtn);
+        qtyWrap.appendChild(removeBtn);
+
+        cartItem.appendChild(info);
+        cartItem.appendChild(qtyWrap);
+        cartItemsContainer.appendChild(cartItem);
+    });
 }
 
 // Toggle carrinho

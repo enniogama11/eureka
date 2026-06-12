@@ -1,6 +1,7 @@
 // Busca em tempo real
 document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.getElementById('searchInput');
+    if (!searchInput) return;
 
     searchInput.addEventListener('input', (e) => {
         const searchTerm = e.target.value.toLowerCase().trim();
@@ -20,6 +21,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Função para pesquisar produtos
 function searchProducts(searchTerm) {
+    if (!menuData || !Array.isArray(menuData.products) || !Array.isArray(menuData.categories)) {
+        return;
+    }
+
     const mainContent = document.getElementById('mainContent');
     mainContent.innerHTML = '';
 

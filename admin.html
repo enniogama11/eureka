@@ -360,8 +360,10 @@
                 </div>
 
                 <div class="form-group">
-                    <label>URL da Imagem</label>
-                    <input type="text" id="productImage" placeholder="https://example.com/image.jpg">
+                    <label>Imagem do Produto</label>
+                    <input type="text" id="productImage" placeholder="https://example.com/image.jpg ou imagem em base64">
+                    <input type="file" id="productImageFile" accept="image/*" style="margin-top: 8px;">
+                    <small style="color: rgba(212, 175, 55, 0.75); display: block; margin-top: 6px;">Escolha uma imagem no seu dispositivo para usar diretamente no menu.</small>
                 </div>
 
                 <div class="form-group">
@@ -416,20 +418,48 @@
             window.location.href = 'admin-login.html';
         }
 
+        const MENU_STORAGE_KEY = 'eurekMenuData';
+
         let menuData = null;
         let selectedProductId = null;
         let selectedCategoryId = null;
 
+        function isValidMenuData(data) {
+            return Boolean(data && Array.isArray(data.categories) && Array.isArray(data.products));
+        }
+
         // Carregar dados
         async function loadMenu() {
             try {
+                const savedMenu = localStorage.getItem(MENU_STORAGE_KEY);
+                if (savedMenu) {
+                    const parsedMenu = JSON.parse(savedMenu);
+                    if (isValidMenuData(parsedMenu)) {
+                        menuData = parsedMenu;
+                        renderCategories();
+                        renderProducts();
+                        renderCategorySelect();
+                        return;
+                    }
+                }
+
                 const response = await fetch('data/menu.json');
+                if (!response.ok) {
+                    throw new Error(`Falha ao carregar menu: ${response.status}`);
+                }
+
                 menuData = await response.json();
+                if (!isValidMenuData(menuData)) {
+                    throw new Error('Estrutura do menu inválida.');
+                }
+
+                localStorage.setItem(MENU_STORAGE_KEY, JSON.stringify(menuData));
                 renderCategories();
                 renderProducts();
                 renderCategorySelect();
             } catch (error) {
                 console.error('Erro ao carregar menu:', error);
+                alert('Não foi possível carregar o menu. Verifique o arquivo data/menu.json.');
             }
         }
 
@@ -494,9 +524,9 @@
             document.getElementById('productCategory').value = product.category;
 
             // Converter items para formato de texto
-            const itemsText = product.items
-                .map(item => `${item.name} - ${item.price}`)
-                .join('\n');
+            const itemsText = Array.isArray(product.items)
+                ? product.items.map(item => `${item.name || ''} - ${item.price || 0}`).join('\n')
+                : '';
             document.getElementById('productItems').value = itemsText;
 
             document.getElementById('deleteBtn').style.display = 'block';
@@ -512,25 +542,44 @@
             const product = menuData.products.find(p => p.id === selectedProductId);
             if (!product) return;
 
+            const name = document.getElementById('productName').value.trim();
+            const price = Number(document.getElementById('productPrice').value);
+
+            if (!name) {
+                alert('Informe um nome para o produto.');
+                return;
+            }
+
+            if (!Number.isFinite(price) || price < 0) {
+                alert('Informe um preço válido em Kz.');
+                return;
+            }
+
             // Atualizar dados
-            product.name = document.getElementById('productName').value;
-            product.price = parseInt(document.getElementById('productPrice').value);
-            product.description = document.getElementById('productDescription').value;
-            product.image = document.getElementById('productImage').value;
+            product.name = name;
+            product.price = Math.round(price);
+            product.description = document.getElementById('productDescription').value.trim();
+            product.image = document.getElementById('productImage').value.trim();
             product.category = document.getElementById('productCategory').value;
 
             // Parsear items
             const itemsText = document.getElementById('productItems').value;
             product.items = itemsText
                 .split('\n')
-                .filter(line => line.trim())
+                .map(line => line.trim())
+                .filter(Boolean)
                 .map(line => {
-                    const [name, price] = line.split(' - ');
+                    const match = line.match(/^(.*?)-\s*(\d+(?:\.\d+)?)\s*$/i);
+                    if (!match) {
+                        return null;
+                    }
+
                     return {
-                        name: name.trim(),
-                        price: parseInt(price.trim())
+                        name: match[1].trim(),
+                        price: Math.max(0, Math.round(Number(match[2])))
                     };
-                });
+                })
+                .filter(Boolean);
 
             // Salvar no localStorage
             localStorage.setItem('eurekMenuData', JSON.stringify(menuData));
@@ -585,6 +634,19 @@
             document.getElementById('deleteBtn').style.display = 'none';
             selectedProductId = null;
         }
+
+        function handleImageUpload(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = () => {
+                document.getElementById('productImage').value = reader.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        document.getElementById('productImageFile').addEventListener('change', handleImageUpload);
 
         // Renderizar select de categorias
         function renderCategorySelect() {

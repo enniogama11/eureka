@@ -3,6 +3,11 @@ function openQRModal() {
     const modal = document.getElementById('qrModal');
     const qrCodeContainer = document.getElementById('qrCode');
 
+    if (!modal || !qrCodeContainer || !window.QRCode) {
+        alert('O QR Code não está disponível no momento.');
+        return;
+    }
+
     // Limpar container anterior
     qrCodeContainer.innerHTML = '';
 
@@ -31,7 +36,8 @@ function closeQRModal() {
 // Fechar modal ao clicar fora
 document.addEventListener('DOMContentLoaded', () => {
     const modal = document.getElementById('qrModal');
-    
+    if (!modal) return;
+
     modal.addEventListener('click', (e) => {
         if (e.target === modal) {
             closeQRModal();

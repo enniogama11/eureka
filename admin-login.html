@@ -224,42 +224,117 @@
     </div>
 
     <script>
-        // Credenciais (em produção, isso seria verificado no servidor)
         const ADMIN_USERNAME = 'admin';
-        const ADMIN_PASSWORD = 'eureka2024';
+        const ADMIN_PASSWORD_HASH_KEY = 'eurekAdminPasswordHash';
+        const ADMIN_PASSWORD_SALT_KEY = 'eurekAdminPasswordSalt';
 
-        function handleLogin(event) {
+        function showError(message) {
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.textContent = message;
+            errorMessage.classList.add('show');
+            setTimeout(() => errorMessage.classList.remove('show'), 3000);
+        }
+
+        async function generateHash(password, salt) {
+            const encoder = new TextEncoder();
+            const keyMaterial = await crypto.subtle.importKey(
+                'raw',
+                encoder.encode(password),
+                'PBKDF2',
+                false,
+                ['deriveBits']
+            );
+
+            const hashBuffer = await crypto.subtle.deriveBits(
+                {
+                    name: 'PBKDF2',
+                    salt,
+                    iterations: 100000,
+                    hash: 'SHA-256'
+                },
+                keyMaterial,
+                256
+            );
+
+            return Array.from(new Uint8Array(hashBuffer))
+                .map(byte => byte.toString(16).padStart(2, '0'))
+                .join('');
+        }
+
+        function ensureAdminPasswordSetup() {
+            if (localStorage.getItem(ADMIN_PASSWORD_HASH_KEY) && localStorage.getItem(ADMIN_PASSWORD_SALT_KEY)) {
+                return Promise.resolve(true);
+            }
+
+            const suggested = Math.random().toString(36).slice(2, 10);
+            const password = prompt('Defina uma palavra-passe para o painel admin (mínimo 6 caracteres).\n\nExemplo sugerido: ' + suggested, '');
+
+            if (!password || password.trim().length < 6) {
+                showError('A palavra-passe tem de ter pelo menos 6 caracteres.');
+                return Promise.reject(new Error('password-too-short'));
+            }
+
+            return crypto.getRandomValues(new Uint8Array(16)).buffer
+                .then(salt => {
+                    const saltBuffer = new Uint8Array(salt);
+                    return generateHash(password.trim(), saltBuffer)
+                        .then(hash => {
+                            localStorage.setItem(ADMIN_PASSWORD_HASH_KEY, hash);
+                            localStorage.setItem(ADMIN_PASSWORD_SALT_KEY, btoa(String.fromCharCode(...saltBuffer)));
+                            return true;
+                        });
+                });
+        }
+
+        async function verifyPassword(password) {
+            const saltBase64 = localStorage.getItem(ADMIN_PASSWORD_SALT_KEY);
+            const hashStored = localStorage.getItem(ADMIN_PASSWORD_HASH_KEY);
+
+            if (!saltBase64 || !hashStored) {
+                return false;
+            }
+
+            const salt = Uint8Array.from(atob(saltBase64), char => char.charCodeAt(0));
+            const hash = await generateHash(password, salt);
+            return hash === hashStored;
+        }
+
+        async function handleLogin(event) {
             event.preventDefault();
 
-            const username = document.getElementById('username').value;
+            const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
-            const errorMessage = document.getElementById('errorMessage');
 
-            // Validar credenciais
-            if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-                // Salvar token de autenticação no sessionStorage
+            try {
+                await ensureAdminPasswordSetup();
+
+                if (username !== ADMIN_USERNAME) {
+                    showError('Utilizador inválido.');
+                    document.getElementById('password').value = '';
+                    document.getElementById('username').focus();
+                    return;
+                }
+
+                const isValid = await verifyPassword(password);
+
+                if (!isValid) {
+                    showError('Senha incorreta.');
+                    document.getElementById('password').value = '';
+                    document.getElementById('username').focus();
+                    return;
+                }
+
                 sessionStorage.setItem('eurekAdminAuth', 'true');
-                sessionStorage.setItem('eurekAdminTime', Date.now());
-
-                // Redirecionar para o painel admin
+                sessionStorage.setItem('eurekAdminTime', String(Date.now()));
                 window.location.href = 'admin.html';
-            } else {
-                // Mostrar erro
-                errorMessage.textContent = '❌ Utilizador ou senha incorretos!';
-                errorMessage.classList.add('show');
-
-                // Limpar campos
-                document.getElementById('password').value = '';
-                document.getElementById('username').focus();
-
-                // Remover mensagem de erro após 3 segundos
-                setTimeout(() => {
-                    errorMessage.classList.remove('show');
-                }, 3000);
+            } catch (error) {
+                if (error && error.message !== 'password-too-short') {
+                    console.error('Erro ao autenticar admin:', error);
+                    showError('Não foi possível validar a palavra-passe.');
+                }
             }
         }
 
-        // Focar no campo de utilizador ao carregar
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('username').focus();
         });
