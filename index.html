@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Eureka Lounge - Menu Digital</title>
-     <!-- FAVICON: use a logo 'img/eurea.png' as site icon -->
     <link rel="icon" href="img/eurea.png" type="image/png">
     <link rel="shortcut icon" href="img/eurea.png" type="image/png">
     <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.0/src/bold/style.css">
@@ -12,122 +11,93 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-
+    <!-- Header -->
     <header>
-        <img src="img/eurea.png" alt="Eureka Lounge Logo">
-       
-        <nav>
-            <a href="#entradas">Entradas</a>
-            <a href="#carnes">Carnes</a>
-            <a href="#pratos">Pratos</a>
-            <a href="#guarnicoes">Guarnições</a>
-            <a href="#fastfood">Fast Food</a>
-            <a href="#peixes">Peixes</a>
-            <a href="#bebidas">Bebidas</a>
-        </nav>
+        <div class="header-top">
+            <img src="img/eurea.png" alt="Eureka Lounge Logo" class="logo">
+            <div class="header-buttons">
+                <button id="qrBtn" class="btn-icon" title="QR Code">
+                    <i class="ph-bold ph-qr-code"></i>
+                </button>
+                <button id="adminBtn" class="btn-icon" title="Administração">
+                    <i class="ph-bold ph-gear"></i>
+                </button>
+                <button id="cartBtn" class="btn-cart" title="Carrinho">
+                    <i class="ph-bold ph-shopping-cart"></i>
+                    <span class="cart-count">0</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="search-container">
+            <input 
+                type="text" 
+                id="searchInput" 
+                class="search-input" 
+                placeholder="🔍 Pesquisar pratos, bebidas..."
+            >
+        </div>
+
+        <!-- Categories Navigation -->
+        <nav class="categories-nav" id="categoriesNav"></nav>
     </header>
 
-    <h2 id="entradas"><i class="ph-bold ph-fork-knife"></i> Entradas / Petiscos</h2>
-    <div class="menu-grid">
-        <div class="card">
-            <div class="dish-img" style="background:url('https://www.foodandwine.com/thmb/YqtSpajmztyHG1tWz3VlGj6MT_o=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/Buffalo-Wings-Recipe-FT-BLOG1222-26e07fdb9aec4afe8d4bc39ea331c753.jpg') center/cover;"></div>
-            <h3>Asinhas - 2.500 Kz</h3>
-            <div class="item"><span>Sopa</span><span class="price">1.500 Kz</span></div>
-            <div class="item"><span>Azeitonas ao Alho</span><span class="price">1.500 Kz</span></div>
-            <div class="item"><span>Moelas</span><span class="price">2.000 Kz</span></div>
+    <!-- Main Content -->
+    <main id="mainContent">
+        <!-- Categories will be dynamically loaded here -->
+    </main>
+
+    <!-- Cart Sidebar -->
+    <div id="cartSidebar" class="cart-sidebar">
+        <div class="cart-header">
+            <h2>Seu Pedido</h2>
+            <button id="closeCart" class="close-btn">✕</button>
         </div>
-        <div class="card">
-            <div class="dish-img" style="background:url('https://nomadparadise.com/wp-content/uploads/2023/03/494_07.jpg') center/cover;"></div>
-            <h3>Chouriço Acebolado - 2.500 Kz</h3>
-            <div class="item"><span>Linguiça Acebolada</span><span class="price">2.500 Kz</span></div>
-            <div class="item"><span>Chouriço Caseiro</span><span class="price">7.000 Kz</span></div>
+        <div id="cartItems" class="cart-items"></div>
+        <div class="cart-footer">
+            <div class="cart-total">
+                <strong>Total:</strong>
+                <span id="cartTotal">0 Kz</span>
+            </div>
+            <button id="pdfBtn" class="btn-primary">
+                <i class="ph-bold ph-download"></i> PDF
+            </button>
+            <button id="whatsappBtn" class="btn-primary btn-whatsapp">
+                <i class="ph-bold ph-whatsapp-logo"></i> WhatsApp
+            </button>
         </div>
     </div>
 
-    <h2 id="carnes"><i class="ph-bold ph-steak"></i> Carnes & Grelhados</h2>
-    <div class="menu-grid">
-        <div class="card">
-            <h3>Grelhados</h3>
-            <div class="item"><span>Carne de Porco</span><span class="price">2.500 Kz</span></div>
-            <div class="item"><span>Grelhada Mista (2 pessoas)</span><span class="price">6.000 Kz</span></div>
-            <div class="item"><span>Grelhada Mista 5 (5 pessoas)</span><span class="price">15.000 Kz</span></div>
-            <div class="item"><span>Meio Frango</span><span class="price">5.000 Kz</span></div>
-            <div class="item"><span>Frango Inteiro</span><span class="price">10.000 Kz</span></div>
+    <!-- QR Code Modal -->
+    <div id="qrModal" class="modal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeQRModal()">✕</button>
+            <h2>QR Code do Menu</h2>
+            <div id="qrCode" class="qr-code-container"></div>
+            <p>Escaneie para acessar o menu</p>
         </div>
     </div>
 
-    <h2 id="pratos"><i class="ph-bold ph-bowl-food"></i> Pratos</h2>
-    <div class="menu-grid">
-        <div class="card">
-            <div class="dish-img" style="background:url('https://img.sndimg.com/food/image/upload/q_92,fl_progressive,w_1200,c_scale/v1/img/recipes/49/81/66/pici0cCJo.jpg') center/cover;"></div>
-            <h3>Muamba de Galinha - 3.500 Kz</h3>
-            <div class="item"><span>Almoço (até 16h)</span><span class="price">2.500 Kz</span></div>
-            <div class="item"><span>Bitoque</span><span class="price">5.000 Kz</span></div>
-            <div class="item"><span>Churrasco (coxa, arroz, salada, batata)</span><span class="price">3.000 Kz</span></div>
-        </div>
-        <div class="card">
-            <div class="dish-img" style="background:url('https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/Moamba_traditional_dish_in_Luanda.JPG/1200px-Moamba_traditional_dish_in_Luanda.JPG') center/cover;"></div>
-            <h3>Feijoada / Caldeirada / Calulu - 3.500 Kz</h3>
-        </div>
-    </div>
+    <!-- Cart Overlay -->
+    <div id="cartOverlay" class="cart-overlay" onclick="toggleCart()"></div>
 
-    <h2 id="guarnicoes"><i class="ph-bold ph-carrot"></i> Guarnições</h2>
-    <div class="menu-grid">
-        <div class="card">
-            <h3>Guarnições</h3>
-            <div class="item"><span>Batatas Fritas</span><span class="price">1.000 Kz</span></div>
-            <div class="item"><span>Arroz Branco</span><span class="price">1.000 Kz</span></div>
-            <div class="item"><span>Arroz de Cenoura</span><span class="price">1.250 Kz</span></div>
-            <div class="item"><span>Arroz de Açafrão</span><span class="price">1.500 Kz</span></div>
-            <div class="item"><span>Feijão</span><span class="price">1.500 Kz</span></div>
-            <div class="item"><span>Funje de Bombó</span><span class="price">1.000 Kz</span></div>
-             <div class="item"><span>Verduras</span><span class="price">1.000 Kz</span></div>
-            <div class="item"><span>Salada</span><span class="price">1.000 Kz</span></div>
-            <div class="item"><span>Ovo cozido</span><span class="price">300 Kz</span></div>
-        </div>
-    </div>
-
-    <h2 id="fastfood"><i class="ph-bold ph-hamburger"></i> Fast Food</h2>
-    <div class="menu-grid">
-        <div class="card">
-            <h3>Fast Food</h3>
-            <div class="item"><span>Hamburguer</span><span class="price">2.500 Kz</span></div>
-            <div class="item"><span>Cachorro Quente</span><span class="price">1.800 Kz</span></div>
-            <div class="item"><span>Tosta Mista</span><span class="price">1.500 Kz</span></div>
-        </div>
-    </div>
-
-    <h2 id="peixes"><i class="ph-bold ph-fish"></i> Peixes & Mariscos</h2>
-    <div class="menu-grid">
-        <div class="card">
-            <div class="dish-img" style="background:url('https://www.tasteoflisboa.com/wp-content/uploads/sites/2712/2025/02/06.Best-African-dishes-you-can-try-in-Lisbon_Mufete.png') center/cover;"></div>
-            <h3>Mufete - 6.000 Kz</h3>
-            <div class="item"><span>Peixe Grelhado</span><span class="price">2.500 Kz</span></div>
-            <div class="item"><span>Espetada de Porco (acrescenta)</span><span class="price">2.000 Kz</span></div>
-        </div>
-    </div>
-
-    <h2 id="bebidas"><i class="ph-bold ph-martini"></i> Bebidas & Bar</h2>
-    <div class="menu-grid">
-        <div class="card">
-            <div class="dish-img" style="background:url('https://cdn.prod.website-files.com/67aeb7b4fcf915c1557b0941/67d9160697161d40e86a4c93_5%20wats.webp') center/cover;"></div>
-            <h3>Gin Gordon (cálice) - 1.000 Kz</h3>
-            <div class="item"><span>Cervejas Nacionais</span><span class="price">500 Kz</span></div>
-            <div class="item"><span>Refrigerantes Garrafa</span><span class="price">500 Kz</span></div>
-            <div class="item"><span>Vinhos (taça) / Whisky (cálice)</span><span class="price">1.000 Kz</span></div>
-            <div class="item"><span>Sumos Naturais</span><span class="price">1.500 Kz</span></div>
-        </div>
-    </div>
-
+    <!-- Footer -->
     <footer>
         <p><i class="ph-bold ph-map-pin"></i> Localização: Camama 1 - Shopping Popular, Luanda, Angola</p>
         <p><i class="ph-bold ph-phone"></i> Telefone: +244 950 671 427</p>
-        <p><i class="ph-bold ph-clock"></i> Horário: Segunda-feira á Domingo 11h ás 01h</p>
+        <p><i class="ph-bold ph-clock"></i> Horário: Segunda-feira à Domingo 11h às 01h</p>
         <p><i class="ph-bold ph-instagram-logo"></i> Siga-nos: @eurekalounge</p>
-        <p>Acesse este menu a qualquer hora através do QR code. Obrigado por escolher Eureka Lounge!</p>
     </footer>
 
-    <script src="js/js.js"></script>
-
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="js/menu.js"></script>
+    <script src="js/cart.js"></script>
+    <script src="js/search.js"></script>
+    <script src="js/qrcode.js"></script>
+    <script src="js/pdf.js"></script>
+    <script src="js/whatsapp.js"></script>
 </body>
 </html>
