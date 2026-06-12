@@ -226,8 +226,6 @@
     <script>
         const ADMIN_USERNAME = 'admin';
         const DEFAULT_ADMIN_PASSWORD = 'eureka2024';
-        const ADMIN_PASSWORD_HASH_KEY = 'eurekAdminPasswordHash';
-        const ADMIN_PASSWORD_SALT_KEY = 'eurekAdminPasswordSalt';
 
         function showError(message) {
             const errorMessage = document.getElementById('errorMessage');
@@ -236,47 +234,8 @@
             setTimeout(() => errorMessage.classList.remove('show'), 3000);
         }
 
-        async function generateHash(password, salt) {
-            const encoder = new TextEncoder();
-            const keyMaterial = await crypto.subtle.importKey(
-                'raw',
-                encoder.encode(password),
-                'PBKDF2',
-                false,
-                ['deriveBits']
-            );
-
-            const hashBuffer = await crypto.subtle.deriveBits(
-                {
-                    name: 'PBKDF2',
-                    salt,
-                    iterations: 100000,
-                    hash: 'SHA-256'
-                },
-                keyMaterial,
-                256
-            );
-
-            return Array.from(new Uint8Array(hashBuffer))
-                .map(byte => byte.toString(16).padStart(2, '0'))
-                .join('');
-        }
-
-        async function verifyPassword(password) {
-            if (password === DEFAULT_ADMIN_PASSWORD) {
-                return true;
-            }
-
-            const saltBase64 = localStorage.getItem(ADMIN_PASSWORD_SALT_KEY);
-            const hashStored = localStorage.getItem(ADMIN_PASSWORD_HASH_KEY);
-
-            if (!saltBase64 || !hashStored) {
-                return password === DEFAULT_ADMIN_PASSWORD;
-            }
-
-            const salt = Uint8Array.from(atob(saltBase64), char => char.charCodeAt(0));
-            const hash = await generateHash(password, salt);
-            return hash === hashStored;
+        function verifyPassword(password) {
+            return password === DEFAULT_ADMIN_PASSWORD;
         }
 
         async function handleLogin(event) {
@@ -293,7 +252,7 @@
                     return;
                 }
 
-                const isValid = await verifyPassword(password);
+                const isValid = verifyPassword(password);
 
                 if (!isValid) {
                     showError('Senha incorreta.');
@@ -314,6 +273,8 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
+            localStorage.removeItem('eurekAdminPasswordHash');
+            localStorage.removeItem('eurekAdminPasswordSalt');
             document.getElementById('username').focus();
         });
     </script>
