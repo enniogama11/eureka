@@ -428,12 +428,22 @@
             return Boolean(data && Array.isArray(data.categories) && Array.isArray(data.products));
         }
 
+        function safeParseMenuData(raw) {
+            try {
+                return JSON.parse(raw);
+            } catch (error) {
+                console.warn('Menu salvo inválido, descartando:', error);
+                localStorage.removeItem(MENU_STORAGE_KEY);
+                return null;
+            }
+        }
+
         // Carregar dados
         async function loadMenu() {
             try {
                 const savedMenu = localStorage.getItem(MENU_STORAGE_KEY);
                 if (savedMenu) {
-                    const parsedMenu = JSON.parse(savedMenu);
+                    const parsedMenu = safeParseMenuData(savedMenu);
                     if (isValidMenuData(parsedMenu)) {
                         menuData = parsedMenu;
                         renderCategories();
@@ -492,6 +502,8 @@
             const productsList = document.getElementById('productsList');
             productsList.innerHTML = '';
 
+            if (!menuData || !Array.isArray(menuData.products)) return;
+
             const products = menuData.products.filter(p => p.category === selectedCategoryId);
 
             products.forEach(product => {
@@ -539,6 +551,11 @@
                 return;
             }
 
+            if (!menuData || !Array.isArray(menuData.products)) {
+                alert('O menu ainda não foi carregado.');
+                return;
+            }
+
             const product = menuData.products.find(p => p.id === selectedProductId);
             if (!product) return;
 
@@ -581,11 +598,11 @@
                 })
                 .filter(Boolean);
 
-            // Salvar no localStorage
-            localStorage.setItem('eurekMenuData', JSON.stringify(menuData));
+            localStorage.setItem(MENU_STORAGE_KEY, JSON.stringify(menuData));
 
             showSuccess();
             renderProducts();
+            renderCategorySelect();
         }
 
         // Deletar produto
@@ -595,7 +612,7 @@
             if (!confirm('Tem certeza que quer deletar este produto?')) return;
 
             menuData.products = menuData.products.filter(p => p.id !== selectedProductId);
-            localStorage.setItem('eurekMenuData', JSON.stringify(menuData));
+            localStorage.setItem(MENU_STORAGE_KEY, JSON.stringify(menuData));
 
             showSuccess();
             resetForm();
@@ -604,6 +621,11 @@
 
         // Adicionar novo produto
         function addNewProduct() {
+            if (!menuData || !Array.isArray(menuData.products)) {
+                alert('O menu ainda não foi carregado.');
+                return;
+            }
+
             const newId = Math.max(...menuData.products.map(p => p.id), 0) + 1;
 
             const newProduct = {
@@ -617,7 +639,7 @@
             };
 
             menuData.products.push(newProduct);
-            localStorage.setItem('eurekMenuData', JSON.stringify(menuData));
+            localStorage.setItem(MENU_STORAGE_KEY, JSON.stringify(menuData));
 
             selectedProductId = newId;
             renderProducts();
@@ -631,6 +653,7 @@
             document.getElementById('productDescription').value = '';
             document.getElementById('productImage').value = '';
             document.getElementById('productItems').value = '';
+            document.getElementById('productImageFile').value = '';
             document.getElementById('deleteBtn').style.display = 'none';
             selectedProductId = null;
         }
