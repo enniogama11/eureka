@@ -320,7 +320,10 @@
     <div class="admin-container">
         <div class="admin-header">
             <h1>🔧 Painel Admin</h1>
-            <a href="index.html">← Voltar ao Menu</a>
+            <div style="display: flex; gap: 10px;">
+                <a href="index.html">← Voltar ao Menu</a>
+                <button onclick="logout()" style="background: #ff4444; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: all 0.3s;">🔒 Logout</button>
+            </div>
         </div>
 
         <div class="success-message" id="successMessage">
@@ -386,6 +389,33 @@
     </div>
 
     <script>
+        // Verificar autenticação
+        function checkAuth() {
+            const auth = sessionStorage.getItem('eurekAdminAuth');
+            const authTime = sessionStorage.getItem('eurekAdminTime');
+            const currentTime = Date.now();
+            const sessionTimeout = 24 * 60 * 60 * 1000; // 24 horas
+
+            if (!auth || !authTime || (currentTime - parseInt(authTime)) > sessionTimeout) {
+                // Sessão expirada ou não autenticado
+                window.location.href = 'admin-login.html';
+                return false;
+            }
+            return true;
+        }
+
+        // Verificar autenticação ao carregar
+        if (!checkAuth()) {
+            document.body.innerHTML = '';
+        }
+
+        // Função para logout
+        function logout() {
+            sessionStorage.removeItem('eurekAdminAuth');
+            sessionStorage.removeItem('eurekAdminTime');
+            window.location.href = 'admin-login.html';
+        }
+
         let menuData = null;
         let selectedProductId = null;
         let selectedCategoryId = null;
