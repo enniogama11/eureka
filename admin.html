@@ -295,6 +295,13 @@
             display: none;
         }
 
+        .sync-status {
+            font-size: 0.9rem;
+            margin-left: 10px;
+            font-weight: normal;
+            color: var(--gold);
+        }
+
         @keyframes slideIn {
             from {
                 transform: translateY(-20px);
@@ -327,7 +334,7 @@
 <body>
     <div class="admin-container">
         <div class="admin-header">
-            <h1>🔧 Painel Admin</h1>
+            <h1>🔧 Painel Admin <span id="syncStatus" class="sync-status"></span></h1>
             <div style="display: flex; gap: 10px;">
                 <button onclick="exportMenu()" class="btn-github">📥 Baixar menu.json</button>
                 <a href="index.html">← Voltar ao Menu</a>
@@ -336,7 +343,7 @@
         </div>
 
         <div class="success-message" id="successMessage">
-            ✓ Alterações salvas com sucesso!
+            ✓ Alterações salvas e sincronizadas com o GitHub!
         </div>
 
         <div class="admin-content">
@@ -392,7 +399,7 @@
                 </div>
 
                 <div class="button-group">
-                    <button class="btn-save" onclick="saveProduct()">💾 Salvar no Navegador</button>
+                    <button class="btn-save" id="saveBtn" onclick="saveProduct()">💾 Salvar no GitHub</button>
                     <button class="btn-delete" onclick="deleteProduct()" id="deleteBtn" style="display: none;">🗑️ Deletar</button>
                     <button class="btn-cancel" onclick="resetForm()">✕ Cancelar</button>
                 </div>
@@ -407,6 +414,11 @@
         // Configurações Cloudinary
         const CLOUDINARY_CLOUD_NAME = 'dy2baee3r';
         const CLOUDINARY_UPLOAD_PRESET = 'eureka_presets';
+
+        // Configurações GitHub
+        const GITHUB_TOKEN = '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';
+        const GITHUB_REPO = 'enniogama11/eureka';
+        const GITHUB_PATH = 'data/menu.json';
 
         // Verificar autenticação
         function checkAuth() {
@@ -441,38 +453,81 @@
             return Boolean(data && Array.isArray(data.categories) && Array.isArray(data.products));
         }
 
-        function safeParseMenuData(raw) {
-            try {
-                return JSON.parse(raw);
-            } catch (error) {
-                localStorage.removeItem(MENU_STORAGE_KEY);
-                return null;
-            }
-        }
-
         async function loadMenu() {
             try {
-                const savedMenu = localStorage.getItem(MENU_STORAGE_KEY);
-                if (savedMenu) {
-                    const parsedMenu = safeParseMenuData(savedMenu);
-                    if (isValidMenuData(parsedMenu)) {
-                        menuData = parsedMenu;
-                        renderCategories();
-                        renderProducts();
-                        renderCategorySelect();
-                        return;
-                    }
-                }
-
-                const response = await fetch('data/menu.json');
+                updateSyncStatus('⏳ Carregando...');
+                const response = await fetch('data/menu.json?t=' + Date.now());
                 menuData = await response.json();
-                localStorage.setItem(MENU_STORAGE_KEY, JSON.stringify(menuData));
+                
                 renderCategories();
                 renderProducts();
                 renderCategorySelect();
+                updateSyncStatus('✅ Sincronizado');
             } catch (error) {
                 console.error('Erro ao carregar menu:', error);
+                updateSyncStatus('❌ Erro ao carregar');
             }
+        }
+
+        function updateSyncStatus(text) {
+            document.getElementById('syncStatus').textContent = text;
+        }
+
+        async function syncToGitHub() {
+            const saveBtn = document.getElementById('saveBtn');
+            const originalText = saveBtn.textContent;
+            
+            try {
+                saveBtn.disabled = true;
+                saveBtn.textContent = '⏳ Sincronizando...';
+                updateSyncStatus('⏳ Enviando ao GitHub...');
+
+                // 1. Obter o SHA do arquivo atual
+                const getRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_PATH}`, {
+                    headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
+                });
+                const fileData = await getRes.json();
+                const sha = fileData.sha;
+
+                // 2. Fazer o update
+                const content = b64EncodeUnicode(JSON.stringify(menuData, null, 2));
+                const putRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_PATH}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${GITHUB_TOKEN}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: `admin: update menu.json via dashboard`,
+                        content: content,
+                        sha: sha
+                    })
+                });
+
+                if (!putRes.ok) throw new Error('Falha na API do GitHub');
+
+                showSuccess();
+                updateSyncStatus('✅ Sincronizado');
+                
+                // Limpar cache local para forçar recarregamento no próximo acesso
+                localStorage.removeItem(MENU_STORAGE_KEY);
+                
+            } catch (error) {
+                console.error('Erro de sincronização:', error);
+                alert('Erro ao salvar no GitHub. Verifique sua conexão ou o Token.');
+                updateSyncStatus('❌ Erro na sincronização');
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.textContent = originalText;
+            }
+        }
+
+        // Helper para lidar com caracteres especiais no Base64
+        function b64EncodeUnicode(str) {
+            return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
+                function(match, p1) {
+                    return String.fromCharCode('0x' + p1);
+                }));
         }
 
         function renderCategories() {
@@ -509,7 +564,7 @@
                         <div class="product-price">${p.price.toLocaleString('pt-AO')} Kz</div>
                     </div>
                     <div class="product-actions">
-                        <button class="btn-small btn-edit" onclick="editProduct(${p.id})">Editar</button>
+                        <button class="btn-small btn-edit" onclick="editProduct('${p.id}')">Editar</button>
                     </div>
                 `;
                 list.appendChild(item);
@@ -517,7 +572,7 @@
         }
 
         function editProduct(id) {
-            const p = menuData.products.find(x => x.id === id);
+            const p = menuData.products.find(x => String(x.id) === String(id));
             if (!p) return;
             selectedProductId = id;
             document.getElementById('productName').value = p.name;
@@ -527,6 +582,7 @@
             document.getElementById('productCategory').value = p.category;
             document.getElementById('productItems').value = (p.items || []).map(i => `${i.name} - ${i.price}`).join('\n');
             document.getElementById('deleteBtn').style.display = 'block';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         async function handleImageUpload(event) {
@@ -557,16 +613,17 @@
                 setTimeout(() => status.style.display = 'none', 3000);
             } catch (error) {
                 console.error(error);
-                status.textContent = '❌ Erro no upload. Verifique o preset.';
+                status.textContent = '❌ Erro no upload.';
                 status.style.color = '#ff4444';
             }
         }
 
         document.getElementById('productImageFile').addEventListener('change', handleImageUpload);
 
-        function saveProduct() {
-            if (!selectedProductId) return alert('Selecione um produto');
-            const p = menuData.products.find(x => x.id === selectedProductId);
+        async function saveProduct() {
+            if (!selectedProductId) return alert('Selecione um produto ou adicione um novo');
+            
+            const p = menuData.products.find(x => String(x.id) === String(selectedProductId));
             p.name = document.getElementById('productName').value;
             p.price = Number(document.getElementById('productPrice').value);
             p.description = document.getElementById('productDescription').value;
@@ -577,21 +634,20 @@
                 return { name: n.trim(), price: Number(pr.trim()) };
             });
 
-            localStorage.setItem(MENU_STORAGE_KEY, JSON.stringify(menuData));
-            showSuccess();
+            await syncToGitHub();
             renderProducts();
         }
 
-        function deleteProduct() {
+        async function deleteProduct() {
             if (!confirm('Deletar produto?')) return;
-            menuData.products = menuData.products.filter(x => x.id !== selectedProductId);
-            localStorage.setItem(MENU_STORAGE_KEY, JSON.stringify(menuData));
+            menuData.products = menuData.products.filter(x => String(x.id) !== String(selectedProductId));
+            await syncToGitHub();
             resetForm();
             renderProducts();
         }
 
         function addNewProduct() {
-            const id = crypto.randomUUID(); // Usar UUID para IDs mais robustos
+            const id = crypto.randomUUID();
             const p = { id, name: 'Novo Produto', price: 0, category: selectedCategoryId, image: '', items: [] };
             menuData.products.push(p);
             editProduct(id);
@@ -611,7 +667,7 @@
         function showSuccess() {
             const msg = document.getElementById('successMessage');
             msg.classList.add('show');
-            setTimeout(() => msg.classList.remove('show'), 3000);
+            setTimeout(() => msg.classList.remove('show'), 4000);
         }
 
         function renderCategorySelect() {
@@ -633,7 +689,6 @@
             document.body.appendChild(downloadAnchorNode);
             downloadAnchorNode.click();
             downloadAnchorNode.remove();
-            alert('Arquivo menu.json baixado! Agora você deve enviá-lo para a pasta "data/" no seu GitHub para atualizar o site.');
         }
 
         document.addEventListener('DOMContentLoaded', loadMenu);
