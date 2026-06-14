@@ -22,7 +22,12 @@ function generatePDF() {
     element.style.color = '#333';
 
     const logoUrl = 'img/eurea.png';
-    const restaurantInfo = menuData.restaurant;
+    const restaurantInfo = menuData && menuData.restaurant ? menuData.restaurant : {};
+    // Adicionar validação para garantir que restaurantInfo tenha as propriedades esperadas
+    if (!restaurantInfo.location || !restaurantInfo.phone || !restaurantInfo.hours || !restaurantInfo.instagram) {
+        alert('Informações do restaurante incompletas. Não foi possível gerar o PDF.');
+        return;
+    }
     const total = getCartTotal();
 
     element.innerHTML = `

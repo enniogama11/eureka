@@ -30,9 +30,9 @@ function sendToWhatsApp() {
     });
 
     message += `💰 *Total: ${total.toLocaleString('pt-AO')} Kz*\n\n`;
-    message += `📍 Local: ${restaurantInfo.location}\n`;
-    message += `📞 Telefone: ${restaurantInfo.phone}\n`;
-    message += `🕐 Horário: ${restaurantInfo.hours}\n\n`;
+    message += `📍 Local: ${restaurantInfo.location || 'Não informado'}\n`;
+    message += `📞 Telefone: ${restaurantInfo.phone || 'Não informado'}\n`;
+    message += `🕐 Horário: ${restaurantInfo.hours || 'Não informado'}\n\n`;
     message += `_Pedido realizado via Menu Digital Eureka_`;
 
     // Codificar mensagem

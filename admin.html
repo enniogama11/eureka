@@ -591,7 +591,7 @@
         }
 
         function addNewProduct() {
-            const id = Math.max(0, ...menuData.products.map(p => p.id)) + 1;
+            const id = crypto.randomUUID(); // Usar UUID para IDs mais robustos
             const p = { id, name: 'Novo Produto', price: 0, category: selectedCategoryId, image: '', items: [] };
             menuData.products.push(p);
             editProduct(id);

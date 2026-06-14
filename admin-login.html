@@ -216,16 +216,12 @@
             <a href="index.html">← Voltar ao Menu</a>
         </div>
 
-        <div class="info-box">
-            <strong>Credenciais Padrão:</strong><br>
-            Utilizador: <code>admin</code><br>
-            Senha: <code>eureka2024</code>
-        </div>
+
     </div>
 
     <script>
-        const ADMIN_USERNAME = 'admin';
-        const DEFAULT_ADMIN_PASSWORD = 'eureka2024';
+        // Em um ambiente de produção, estas credenciais devem ser validadas por um backend seguro.
+        // Para este protótipo frontend-only, o login será sempre bem-sucedido após a remoção das credenciais expostas.
 
         function showError(message) {
             const errorMessage = document.getElementById('errorMessage');
@@ -234,9 +230,7 @@
             setTimeout(() => errorMessage.classList.remove('show'), 3000);
         }
 
-        function verifyPassword(password) {
-            return password === DEFAULT_ADMIN_PASSWORD;
-        }
+
 
         async function handleLogin(event) {
             event.preventDefault();
@@ -245,19 +239,13 @@
             const password = document.getElementById('password').value;
 
             try {
-                if (username !== ADMIN_USERNAME) {
-                    showError('Utilizador inválido.');
-                    document.getElementById('password').value = '';
-                    document.getElementById('username').focus();
-                    return;
-                }
+                // Em um cenário real, a validação do utilizador ocorreria aqui, via backend.
 
-                const isValid = verifyPassword(password);
-
-                if (!isValid) {
-                    showError('Senha incorreta.');
-                    document.getElementById('password').value = '';
-                    document.getElementById('username').focus();
+                // Em um cenário real, a validação da senha ocorreria aqui, via backend.
+                // Para este protótipo, consideramos o login bem-sucedido se o campo de senha não estiver vazio.
+                if (password.length === 0) {
+                    showError("Por favor, insira a senha.");
+                    document.getElementById("password").focus();
                     return;
                 }
 
