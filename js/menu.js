@@ -33,6 +33,37 @@ async function loadMenu() {
             }
         }
 
+        // Tentar carregar do Supabase
+        if (typeof supabaseClient !== 'undefined') {
+            const supabaseMenu = await loadMenuFromSupabase();
+            if (supabaseMenu && supabaseMenu.categories.length > 0) {
+                // Transformar dados do Supabase para o formato esperado
+                menuData = {
+                    categories: supabaseMenu.categories.map(cat => ({
+                        id: cat.id,
+                        name: cat.name,
+                        emoji: getEmojiForCategory(cat.name),
+                        icon: getIconForCategory(cat.name)
+                    })),
+                    products: supabaseMenu.products.map(prod => ({
+                        id: prod.id,
+                        name: prod.name,
+                        description: prod.description,
+                        price: prod.price,
+                        image: prod.image_url,
+                        category: prod.category_id,
+                        items: []
+                    }))
+                };
+                localStorage.setItem(MENU_STORAGE_KEY, JSON.stringify(menuData));
+                renderCategories();
+                renderMenu();
+                setupEventListeners();
+                return;
+            }
+        }
+
+        // Fallback para ficheiro JSON local
         const response = await fetch('data/menu.json');
         if (!response.ok) {
             throw new Error(`Falha ao carregar menu: ${response.status}`);
@@ -51,6 +82,34 @@ async function loadMenu() {
         console.error('Erro ao carregar menu:', error);
         showMenuError('Tente recarregar a página ou verificar a conexão.');
     }
+}
+
+// Função auxiliar para obter emoji baseado na categoria
+function getEmojiForCategory(categoryName) {
+    const emojiMap = {
+        'Entradas / Petiscos': '🍴',
+        'Carnes & Grelhados': '🥩',
+        'Pratos': '🍲',
+        'Guarnições': '🥕',
+        'Fast Food': '🍔',
+        'Peixes & Mariscos': '🐟',
+        'Bebidas & Bar': '🍹'
+    };
+    return emojiMap[categoryName] || '🍽️';
+}
+
+// Função auxiliar para obter ícone baseado na categoria
+function getIconForCategory(categoryName) {
+    const iconMap = {
+        'Entradas / Petiscos': 'ph-fork-knife',
+        'Carnes & Grelhados': 'ph-steak',
+        'Pratos': 'ph-bowl-food',
+        'Guarnições': 'ph-carrot',
+        'Fast Food': 'ph-hamburger',
+        'Peixes & Mariscos': 'ph-fish',
+        'Bebidas & Bar': 'ph-martini'
+    };
+    return iconMap[categoryName] || 'ph-fork-knife';
 }
 
 // Renderizar botões de categorias
