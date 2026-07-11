@@ -1,13 +1,24 @@
 <!DOCTYPE html>
-<html lang="pt">
+<html lang="pt-AO">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Eureka Lounge - Menu Digital</title>
+    <title>Eureka Lounge | Menu Digital Premium</title>
+    
+    <!-- Meta Tags para SEO e Partilha -->
+    <meta name="description" content="Menu digital premium do Eureka Lounge em Luanda, Angola.">
+    <meta name="theme-color" content="#d4af37">
+    
+    <!-- Favicon -->
     <link rel="icon" href="img/eurea.png" type="image/png">
-    <link rel="shortcut icon" href="img/eurea.png" type="image/png">
-    <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.0/src/bold/style.css">
+    
+    <!-- Fonts e Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.0/src/bold/style.css">
+    
+    <!-- Estilos Originais do Eureka -->
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -45,7 +56,10 @@
 
     <!-- Main Content -->
     <main id="mainContent">
-        <!-- Categories will be dynamically loaded here -->
+        <!-- O conteúdo será carregado dinamicamente via JS -->
+        <div class="loading-container" style="text-align: center; padding: 50px; color: #d4af37;">
+            <p>A carregar menu premium...</p>
+        </div>
     </main>
 
     <!-- Cart Sidebar -->
@@ -91,12 +105,15 @@
     </footer>
 
     <!-- Scripts -->
+    <!-- Carregar o SDK do Supabase primeiro -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <!-- Configuração e Lógica -->
     <script src="js/supabase-config.js"></script>
-    <script src="js/menu.js"></script>
     <script src="js/cart.js"></script>
+    <script src="js/menu.js"></script>
     <script src="js/search.js"></script>
     <script src="js/qrcode.js"></script>
     <script src="js/pdf.js"></script>
