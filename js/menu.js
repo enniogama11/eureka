@@ -33,15 +33,41 @@ function showMenuError(message) {
 
 // Carregar dados do menu
 async function loadMenu() {
+    const renderLoadedMenu = data => {
+        if (!isValidMenuData(data)) throw new Error('Formato de menu inválido.');
+        menuData = data;
+        renderCategories();
+        renderMenu();
+        setupEventListeners();
+    };
+
+    // Primeira opção: endpoint local PHP. Assim o painel administrativo atualiza o menu imediatamente.
     try {
-        console.log('A iniciar carregamento do menu...');
-        
-        // 1. Tentar carregar do Supabase (Prioridade)
+        const localResponse = await fetch(`api/menu.php?t=${Date.now()}`, { cache: 'no-store' });
+        if (localResponse.ok) {
+            const localMenu = await localResponse.json();
+            if (isValidMenuData(localMenu)) {
+                renderLoadedMenu(localMenu);
+                return;
+            }
+        }
+    } catch (error) {
+        console.warn('Endpoint PHP indisponível, usando fallback:', error);
+    }
+
+    // Segunda opção: Supabase, preservado para instalações que ainda o utilizem.
+    try {
         if (typeof supabaseClient !== 'undefined') {
             const supabaseMenu = await loadMenuFromSupabase();
             if (supabaseMenu && supabaseMenu.categories && supabaseMenu.categories.length > 0) {
-                console.log('Dados carregados do Supabase com sucesso.');
-                menuData = {
+                renderLoadedMenu({
+                    restaurant: supabaseMenu.restaurant || {
+                        name: 'Eureka Lounge',
+                        phone: '+244950671427',
+                        location: 'Camama 1 - Shopping Popular, Luanda, Angola',
+                        hours: 'Segunda-feira à Domingo 11h às 01h',
+                        instagram: '@eurekalounge'
+                    },
                     categories: supabaseMenu.categories.map(cat => ({
                         id: cat.id,
                         name: cat.name,
@@ -56,41 +82,37 @@ async function loadMenu() {
                         category: prod.category_id,
                         items: []
                     }))
-                };
-                renderCategories();
-                renderMenu();
-                setupEventListeners();
+                });
                 return;
             }
         }
+    } catch (error) {
+        console.warn('Supabase indisponível, usando fallback local:', error);
+    }
 
-        // 2. Fallback para localStorage
+    // Terceira opção: cache local do browser.
+    try {
         const savedMenu = localStorage.getItem(MENU_STORAGE_KEY);
         if (savedMenu) {
-            const parsedMenu = JSON.parse(savedMenu);
-            if (isValidMenuData(parsedMenu)) {
-                menuData = parsedMenu;
-                renderCategories();
-                renderMenu();
-                setupEventListeners();
+            const parsed = JSON.parse(savedMenu);
+            if (isValidMenuData(parsed)) {
+                renderLoadedMenu(parsed);
                 return;
             }
         }
+    } catch (error) {
+        console.warn('Cache local inválido:', error);
+        localStorage.removeItem(MENU_STORAGE_KEY);
+    }
 
-        // 3. Fallback para ficheiro JSON local
+    // Última opção: ficheiro JSON estático, útil em testes locais e hosts sem PHP ativo.
+    try {
         const response = await fetch('data/menu.json');
-        if (response.ok) {
-            menuData = await response.json();
-            renderCategories();
-            renderMenu();
-            setupEventListeners();
-        } else {
-            throw new Error('Não foi possível carregar os dados do menu.');
-        }
-
+        if (!response.ok) throw new Error('Não foi possível carregar os dados do menu.');
+        renderLoadedMenu(await response.json());
     } catch (error) {
         console.error('Erro crítico no loadMenu:', error);
-        showMenuError('Verifique a sua ligação à internet.');
+        showMenuError('Verifique a configuração do alojamento ou a sua ligação à internet.');
     }
 }
 
@@ -199,7 +221,7 @@ function setupEventListeners() {
     if (qrBtn) qrBtn.onclick = () => typeof openQRModal === 'function' && openQRModal();
 
     const adminBtn = document.getElementById('adminBtn');
-    if (adminBtn) adminBtn.onclick = () => window.location.href = 'admin.html';
+    if (adminBtn) adminBtn.onclick = () => window.location.href = 'admin.php';
 
     const cartBtn = document.getElementById('cartBtn');
     if (cartBtn) cartBtn.onclick = () => typeof toggleCart === 'function' && toggleCart();

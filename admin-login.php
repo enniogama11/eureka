@@ -1,3 +1,10 @@
+<?php
+require_once __DIR__ . '/config/config.php';
+if (eureka_is_admin()) {
+    header('Location: admin.php');
+    exit;
+}
+?>
 <!DOCTYPE html>
 <html lang="pt">
 <head>
@@ -213,56 +220,64 @@
         </form>
 
         <div class="back-link">
-            <a href="index.html">← Voltar ao Menu</a>
+            <a href="index.php">← Voltar ao Menu</a>
         </div>
 
 
     </div>
 
     <script>
-        // Em um ambiente de produção, estas credenciais devem ser validadas por um backend seguro.
-        // Para este protótipo frontend-only, o login será sempre bem-sucedido após a remoção das credenciais expostas.
-
         function showError(message) {
             const errorMessage = document.getElementById('errorMessage');
             errorMessage.textContent = message;
             errorMessage.classList.add('show');
-            setTimeout(() => errorMessage.classList.remove('show'), 3000);
+            setTimeout(() => errorMessage.classList.remove('show'), 3500);
         }
-
-
 
         async function handleLogin(event) {
             event.preventDefault();
 
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
+            const button = event.submitter || event.target.querySelector('button[type="submit"]');
+            const originalText = button ? button.textContent : '';
+
+            if (!username || !password) {
+                showError('Por favor, preencha o utilizador e a senha.');
+                return;
+            }
 
             try {
-                // Em um cenário real, a validação do utilizador ocorreria aqui, via backend.
-
-                // Em um cenário real, a validação da senha ocorreria aqui, via backend.
-                // Para este protótipo, consideramos o login bem-sucedido se o campo de senha não estiver vazio.
-                if (password.length === 0) {
-                    showError("Por favor, insira a senha.");
-                    document.getElementById("password").focus();
-                    return;
+                if (button) {
+                    button.disabled = true;
+                    button.textContent = 'A validar...';
                 }
 
-                sessionStorage.setItem('eurekAdminAuth', 'true');
-                sessionStorage.setItem('eurekAdminTime', String(Date.now()));
-                window.location.href = 'admin.html';
+                const response = await fetch('api/auth.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ username, password })
+                });
+                const result = await response.json();
+
+                if (!response.ok || !result.ok) {
+                    throw new Error(result.error || 'Não foi possível validar a palavra-passe.');
+                }
+
+                window.location.href = 'admin.php';
             } catch (error) {
-                if (error && error.message !== 'password-too-short') {
-                    console.error('Erro ao autenticar admin:', error);
-                    showError('Não foi possível validar a palavra-passe.');
+                console.error('Erro ao autenticar admin:', error);
+                showError(error.message || 'Não foi possível validar a palavra-passe.');
+            } finally {
+                if (button) {
+                    button.disabled = false;
+                    button.textContent = originalText;
                 }
             }
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            localStorage.removeItem('eurekAdminPasswordHash');
-            localStorage.removeItem('eurekAdminPasswordSalt');
             document.getElementById('username').focus();
         });
     </script>

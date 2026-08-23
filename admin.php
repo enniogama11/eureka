@@ -1,6 +1,11 @@
+<?php
+require_once __DIR__ . '/config/config.php';
+eureka_require_admin();
+?>
 <!DOCTYPE html>
 <html lang="pt">
-<head>
+    <head>
+    <meta name="eureka-csrf" content="<?php echo htmlspecialchars(eureka_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin - Eureka Lounge</title>
@@ -337,13 +342,13 @@
             <h1>🔧 Painel Admin <span id="syncStatus" class="sync-status"></span></h1>
             <div style="display: flex; gap: 10px;">
                 <button onclick="exportMenu()" class="btn-github">📥 Baixar menu.json</button>
-                <a href="index.html">← Voltar ao Menu</a>
+                <a href="index.php">← Voltar ao Menu</a>
                 <button onclick="logout()" style="background: #ff4444; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: all 0.3s;">🔒 Logout</button>
             </div>
         </div>
 
         <div class="success-message" id="successMessage">
-            ✓ Alterações salvas e sincronizadas com o GitHub!
+            ✓ Alterações guardadas no servidor!
         </div>
 
         <div class="admin-content">
@@ -399,7 +404,7 @@
                 </div>
 
                 <div class="button-group">
-                    <button class="btn-save" id="saveBtn" onclick="saveProduct()">💾 Salvar no GitHub</button>
+                    <button class="btn-save" id="saveBtn" onclick="saveProduct()">💾 Salvar no servidor</button>
                     <button class="btn-delete" onclick="deleteProduct()" id="deleteBtn" style="display: none;">🗑️ Deletar</button>
                     <button class="btn-cancel" onclick="resetForm()">✕ Cancelar</button>
                 </div>
@@ -411,37 +416,16 @@
     </div>
 
     <script>
-        // Configurações Cloudinary
+        // Upload direto para Cloudinary usando um preset unsigned. Nenhum token privado fica no browser.
         const CLOUDINARY_CLOUD_NAME = 'dy2baee3r';
         const CLOUDINARY_UPLOAD_PRESET = 'eureka_presets';
-
-        // Configurações GitHub
-        const GITHUB_TOKEN = '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';
-        const GITHUB_REPO = 'enniogama11/eureka';
-        const GITHUB_PATH = 'data/menu.json';
-
-        // Verificar autenticação
-        function checkAuth() {
-            const auth = sessionStorage.getItem('eurekAdminAuth');
-            const authTime = sessionStorage.getItem('eurekAdminTime');
-            const currentTime = Date.now();
-            const sessionTimeout = 24 * 60 * 60 * 1000; // 24 horas
-
-            if (!auth || !authTime || (currentTime - parseInt(authTime)) > sessionTimeout) {
-                window.location.href = 'admin-login.html';
-                return false;
-            }
-            return true;
-        }
-
-        if (!checkAuth()) {
-            document.body.innerHTML = '';
-        }
+        const MENU_API_URL = 'api/menu.php';
+        const MENU_SAVE_API_URL = 'api/menu-save.php';
 
         function logout() {
-            sessionStorage.removeItem('eurekAdminAuth');
-            sessionStorage.removeItem('eurekAdminTime');
-            window.location.href = 'admin-login.html';
+            fetch('api/logout.php', { method: 'POST', credentials: 'same-origin' })
+                .catch(error => console.warn('Logout local concluído:', error))
+                .finally(() => { window.location.href = 'admin-login.php'; });
         }
 
         const MENU_STORAGE_KEY = 'eurekMenuData';
@@ -456,9 +440,14 @@
         async function loadMenu() {
             try {
                 updateSyncStatus('⏳ Carregando...');
-                const response = await fetch('data/menu.json?t=' + Date.now());
+                const response = await fetch(`${MENU_API_URL}?t=${Date.now()}`, {
+                    cache: 'no-store',
+                    credentials: 'same-origin'
+                });
+                if (!response.ok) throw new Error('Falha ao carregar o menu.');
                 menuData = await response.json();
-                
+                if (!isValidMenuData(menuData)) throw new Error('Formato de menu inválido.');
+
                 renderCategories();
                 renderProducts();
                 renderCategorySelect();
@@ -473,61 +462,43 @@
             document.getElementById('syncStatus').textContent = text;
         }
 
-        async function syncToGitHub() {
+        async function syncToServer() {
             const saveBtn = document.getElementById('saveBtn');
             const originalText = saveBtn.textContent;
-            
+
             try {
                 saveBtn.disabled = true;
-                saveBtn.textContent = '⏳ Sincronizando...';
-                updateSyncStatus('⏳ Enviando ao GitHub...');
+                saveBtn.textContent = '⏳ A guardar...';
+                updateSyncStatus('⏳ Enviando ao servidor...');
 
-                // 1. Obter o SHA do arquivo atual
-                const getRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_PATH}`, {
-                    headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
-                });
-                const fileData = await getRes.json();
-                const sha = fileData.sha;
-
-                // 2. Fazer o update
-                const content = b64EncodeUnicode(JSON.stringify(menuData, null, 2));
-                const putRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_PATH}`, {
-                    method: 'PUT',
+                const response = await fetch(MENU_SAVE_API_URL, {
+                    method: 'POST',
                     headers: {
-                        'Authorization': `token ${GITHUB_TOKEN}`,
                         'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-Eureka-CSRF': document.querySelector('meta[name="eureka-csrf"]').content
                     },
-                    body: JSON.stringify({
-                        message: `admin: update menu.json via dashboard`,
-                        content: content,
-                        sha: sha
-                    })
+                    credentials: 'same-origin',
+                    body: JSON.stringify(menuData)
                 });
+                const result = await response.json();
 
-                if (!putRes.ok) throw new Error('Falha na API do GitHub');
+                if (!response.ok || !result.ok) {
+                    throw new Error(result.error || 'Falha ao guardar o menu.');
+                }
 
+                menuData = result.menu || menuData;
                 showSuccess();
-                updateSyncStatus('✅ Sincronizado');
-                
-                // Limpar cache local para forçar recarregamento no próximo acesso
+                updateSyncStatus('✅ Guardado no servidor');
                 localStorage.removeItem(MENU_STORAGE_KEY);
-                
             } catch (error) {
-                console.error('Erro de sincronização:', error);
-                alert('Erro ao salvar no GitHub. Verifique sua conexão ou o Token.');
-                updateSyncStatus('❌ Erro na sincronização');
+                console.error('Erro ao guardar menu:', error);
+                alert(error.message || 'Erro ao guardar o menu.');
+                updateSyncStatus('❌ Erro ao guardar');
             } finally {
                 saveBtn.disabled = false;
                 saveBtn.textContent = originalText;
             }
-        }
-
-        // Helper para lidar com caracteres especiais no Base64
-        function b64EncodeUnicode(str) {
-            return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
-                function(match, p1) {
-                    return String.fromCharCode('0x' + p1);
-                }));
         }
 
         function renderCategories() {
@@ -634,14 +605,14 @@
                 return { name: n.trim(), price: Number(pr.trim()) };
             });
 
-            await syncToGitHub();
+            await syncToServer();
             renderProducts();
         }
 
         async function deleteProduct() {
             if (!confirm('Deletar produto?')) return;
             menuData.products = menuData.products.filter(x => String(x.id) !== String(selectedProductId));
-            await syncToGitHub();
+            await syncToServer();
             resetForm();
             renderProducts();
         }

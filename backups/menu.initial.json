@@ -1,0 +1,251 @@
+{
+  "restaurant": {
+    "name": "Eureka Lounge",
+    "phone": "+244950671427",
+    "location": "Camama 1 - Shopping Popular, Luanda, Angola",
+    "hours": "Segunda-feira à Domingo 11h às 01h",
+    "instagram": "@eurekalounge"
+  },
+  "categories": [
+    {
+      "id": "entradas",
+      "name": "Entradas / Petiscos",
+      "emoji": "🍴",
+      "icon": "ph-fork-knife"
+    },
+    {
+      "id": "carnes",
+      "name": "Carnes & Grelhados",
+      "emoji": "🥩",
+      "icon": "ph-steak"
+    },
+    {
+      "id": "pratos",
+      "name": "Pratos",
+      "emoji": "🍲",
+      "icon": "ph-bowl-food"
+    },
+    {
+      "id": "guarnicoes",
+      "name": "Guarnições",
+      "emoji": "🥕",
+      "icon": "ph-carrot"
+    },
+    {
+      "id": "fastfood",
+      "name": "Fast Food",
+      "emoji": "🍔",
+      "icon": "ph-hamburger"
+    },
+    {
+      "id": "peixes",
+      "name": "Peixes & Mariscos",
+      "emoji": "🐟",
+      "icon": "ph-fish"
+    },
+    {
+      "id": "bebidas",
+      "name": "Bebidas & Bar",
+      "emoji": "🍹",
+      "icon": "ph-martini"
+    }
+  ],
+  "products": [
+    {
+      "id": 1,
+      "category": "entradas",
+      "name": "Asinhas",
+      "price": 2500,
+      "image": "https://www.foodandwine.com/thmb/YqtSpajmztyHG1tWz3VlGj6MT_o=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/Buffalo-Wings-Recipe-FT-BLOG1222-26e07fdb9aec4afe8d4bc39ea331c753.jpg",
+      "description": "Asinhas grelhadas e suculentas",
+      "items": [
+        { "name": "Sopa", "price": 1500 },
+        { "name": "Azeitonas ao Alho", "price": 1500 },
+        { "name": "Moelas", "price": 2000 }
+      ]
+    },
+    {
+      "id": 2,
+      "category": "entradas",
+      "name": "Chouriço Acebolado",
+      "price": 2500,
+      "image": "https://nomadparadise.com/wp-content/uploads/2023/03/494_07.jpg",
+      "description": "Chouriço caseiro acebolado",
+      "items": [
+        { "name": "Linguiça Acebolada", "price": 2500 },
+        { "name": "Chouriço Caseiro", "price": 7000 }
+      ]
+    },
+    {
+      "id": 3,
+      "category": "carnes",
+      "name": "Grelhados",
+      "price": 2500,
+      "image": "https://images.unsplash.com/photo-1555939594-58d7cb561d1b?w=500",
+      "description": "Carnes grelhadas na brasa",
+      "items": [
+        { "name": "Carne de Porco", "price": 2500 },
+        { "name": "Grelhada Mista (2 pessoas)", "price": 6000 },
+        { "name": "Grelhada Mista 5 (5 pessoas)", "price": 15000 },
+        { "name": "Meio Frango", "price": 5000 },
+        { "name": "Frango Inteiro", "price": 10000 }
+      ]
+    },
+    {
+      "id": 4,
+      "category": "pratos",
+      "name": "Muamba de Galinha",
+      "price": 3500,
+      "image": "https://img.sndimg.com/food/image/upload/q_92,fl_progressive,w_1200,c_scale/v1/img/recipes/49/81/66/pici0cCJo.jpg",
+      "description": "Tradicional muamba de galinha",
+      "items": [
+        { "name": "Almoço (até 16h)", "price": 2500 },
+        { "name": "Bitoque", "price": 5000 },
+        { "name": "Churrasco (coxa, arroz, salada, batata)", "price": 3000 }
+      ]
+    },
+    {
+      "id": 5,
+      "category": "pratos",
+      "name": "Feijoada / Caldeirada / Calulu",
+      "price": 3500,
+      "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/Moamba_traditional_dish_in_Luanda.JPG/1200px-Moamba_traditional_dish_in_Luanda.JPG",
+      "description": "Pratos tradicionais angolanos",
+      "items": []
+    },
+    {
+      "id": 6,
+      "category": "guarnicoes",
+      "name": "Batatas Fritas",
+      "price": 1000,
+      "image": "https://images.unsplash.com/photo-1599599810694-b5ac4dd64b73?w=500",
+      "description": "Batatas fritas crocantes",
+      "items": []
+    },
+    {
+      "id": 7,
+      "category": "guarnicoes",
+      "name": "Arroz Branco",
+      "price": 1000,
+      "image": "https://images.unsplash.com/photo-1609137253227-b4b88d432b72?w=500",
+      "description": "Arroz branco fluffy",
+      "items": []
+    },
+    {
+      "id": 8,
+      "category": "guarnicoes",
+      "name": "Arroz de Cenoura",
+      "price": 1250,
+      "image": "https://images.unsplash.com/photo-1609137253227-b4b88d432b72?w=500",
+      "description": "Arroz com cenoura fresca",
+      "items": []
+    },
+    {
+      "id": 9,
+      "category": "guarnicoes",
+      "name": "Arroz de Açafrão",
+      "price": 1500,
+      "image": "https://images.unsplash.com/photo-1609137253227-b4b88d432b72?w=500",
+      "description": "Arroz temperado com açafrão",
+      "items": []
+    },
+    {
+      "id": 10,
+      "category": "guarnicoes",
+      "name": "Feijão",
+      "price": 1500,
+      "image": "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=500",
+      "description": "Feijão cozido",
+      "items": []
+    },
+    {
+      "id": 11,
+      "category": "guarnicoes",
+      "name": "Funje de Bombó",
+      "price": 1000,
+      "image": "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=500",
+      "description": "Funje tradicional",
+      "items": []
+    },
+    {
+      "id": 12,
+      "category": "guarnicoes",
+      "name": "Verduras",
+      "price": 1000,
+      "image": "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=500",
+      "description": "Verduras frescas",
+      "items": []
+    },
+    {
+      "id": 13,
+      "category": "guarnicoes",
+      "name": "Salada",
+      "price": 1000,
+      "image": "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=500",
+      "description": "Salada fresca",
+      "items": []
+    },
+    {
+      "id": 14,
+      "category": "guarnicoes",
+      "name": "Ovo Cozido",
+      "price": 300,
+      "image": "https://images.unsplash.com/photo-1585238341710-4913d3a3a48f?w=500",
+      "description": "Ovo cozido",
+      "items": []
+    },
+    {
+      "id": 15,
+      "category": "fastfood",
+      "name": "Hamburguer",
+      "price": 2500,
+      "image": "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500",
+      "description": "Hamburguer suculento",
+      "items": []
+    },
+    {
+      "id": 16,
+      "category": "fastfood",
+      "name": "Cachorro Quente",
+      "price": 1800,
+      "image": "https://images.unsplash.com/photo-1555939594-58d7cb561d1b?w=500",
+      "description": "Cachorro quente quentinho",
+      "items": []
+    },
+    {
+      "id": 17,
+      "category": "fastfood",
+      "name": "Tosta Mista",
+      "price": 1500,
+      "image": "https://images.unsplash.com/photo-1541519227354-08fa5d50c44d?w=500",
+      "description": "Tosta mista deliciosa",
+      "items": []
+    },
+    {
+      "id": 18,
+      "category": "peixes",
+      "name": "Mufete",
+      "price": 6000,
+      "image": "https://www.tasteoflisboa.com/wp-content/uploads/sites/2712/2025/02/06.Best-African-dishes-you-can-try-in-Lisbon_Mufete.png",
+      "description": "Peixe grelhado com pirão",
+      "items": [
+        { "name": "Peixe Grelhado", "price": 2500 },
+        { "name": "Espetada de Porco (acrescenta)", "price": 2000 }
+      ]
+    },
+    {
+      "id": 19,
+      "category": "bebidas",
+      "name": "Gin Gordon (cálice)",
+      "price": 1000,
+      "image": "https://cdn.prod.website-files.com/67aeb7b4fcf915c1557b0941/67d9160697161d40e86a4c93_5%20wats.webp",
+      "description": "Gin Gordon premium",
+      "items": [
+        { "name": "Cervejas Nacionais", "price": 500 },
+        { "name": "Refrigerantes Garrafa", "price": 500 },
+        { "name": "Vinhos (taça) / Whisky (cálice)", "price": 1000 },
+        { "name": "Sumos Naturais", "price": 1500 }
+      ]
+    }
+  ]
+}
